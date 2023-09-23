@@ -1,0 +1,234 @@
+--Average ride duration of each day of the week for the whole year
+SELECT
+  day_of_week,
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year_seasonal` ) AS AvgRideLength_Overall,
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+  WHERE
+    member_casual = 'member' ) AS AvgRideLength_Member,
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+  WHERE
+    member_casual = 'casual' ) AS AvgRideLength_Casual
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+GROUP BY day_of_week
+
+
+--Calculating the average ride for both member and casual for the whole year
+SELECT
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year` ) AS avg_duration_Overall,
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year`
+  WHERE
+    member_casual = 'member' ) AS avg_duration_Member,
+  (
+  SELECT
+    AVG(ride_duration)
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year`
+  WHERE
+    member_casual = 'casual' ) AS avg_duration_Casual 
+
+
+--Calculating the number of trips in each day of the year to find the busiest days of the year for members
+SELECT 
+  day_of_week,
+  COUNT  (day_of_week) AS mode_day_of_week
+ FROM `case-study-projects-394518.Transformed_bk_share.full_year` 
+ WHERE member_casual = 'member'
+ --member_casual = 'casual'
+ GROUP BY day_of_week
+ ORDER BY mode_day_of_week desc
+
+
+--finding out which day of the week is the busiest 
+SELECT
+  member_casual,
+  day_of_week AS mode_day_of_week # Top number OF day_of_week
+FROM (
+  SELECT
+    DISTINCT member_casual,
+    day_of_week,
+    ROW_NUMBER() OVER (PARTITION BY member_casual ORDER BY COUNT(day_of_week) DESC) rn
+  FROM
+    `case-study-projects-394518.Transformed_bk_share.full_year`
+  GROUP BY
+    member_casual,
+    day_of_week )
+WHERE
+  rn = 1
+ORDER BY
+  member_casual DESC
+LIMIT
+  2
+
+
+--calculating the total bike ride for each day of the week for the whole year
+SELECT
+  DISTINCT day_of_week,
+  SUM(
+    CASE
+      WHEN ride_id = ride_id AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS total,
+  SUM(
+    CASE
+      WHEN member_casual = 'member' AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS member,
+  SUM(
+    CASE
+      WHEN member_casual = 'casual' AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS casual
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+WHERE
+  day_of_week IS NOT NULL
+GROUP BY
+  day_of_week
+ORDER BY
+  total DESC
+
+
+  --the number OF rides FOR each day OF the week FOR the 52 weeks IN a FULL year
+SELECT
+  DISTINCT day_of_week,
+  SUM(
+    CASE
+      WHEN ride_id = ride_id AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS total,
+  SUM(
+    CASE
+      WHEN member_casual = 'member' AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS member,
+  SUM(
+    CASE
+      WHEN member_casual = 'casual' AND day_of_week = day_of_week THEN 1
+    ELSE
+    0
+  END
+    ) AS casual
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+WHERE
+  day_of_week IS NOT NULL
+GROUP BY
+  day_of_week
+ORDER BY
+  total DESC
+
+
+--busiest days of members for summer months. The same query was ran for casual riders and also ran for other months. the results was recorded on a table and displayed on a chart
+SELECT day_of_week,
+count(*) AS modedayoweek
+FROM 
+  `case-study-projects-394518.Transformed_bk_share.full_year_seasonal` 
+WHERE member_casual = 'member' and
+  season = 'summer'
+GROUP BY day_of_week
+ORDER BY modedayoweek desc
+LIMIT 1000
+
+
+--Number of rides for each month of the year 
+--since the month label is numeric, a temporary column displaying the name of the month was created
+SELECT
+  CASE
+    WHEN ride_month = 1 THEN 'january'
+    WHEN ride_month = 2 THEN 'february'
+    WHEN ride_month = 3 THEN 'march'
+    WHEN ride_month = 4 THEN 'april'
+    WHEN ride_month = 5 THEN 'may'
+    WHEN ride_month = 6 THEN 'june'
+    WHEN ride_month = 7 THEN 'july'
+    WHEN ride_month = 8 THEN 'august'
+    WHEN ride_month = 9 THEN 'september'
+    WHEN ride_month = 10 THEN 'october'
+    WHEN ride_month = 11 THEN 'november'
+    WHEN ride_month = 12 THEN 'december'
+END
+  AS period,
+  COUNT (ride_id) AS total_ride
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year_seasonal`
+WHERE
+  ride_duration IS NOT NULL
+GROUP BY
+  ride_month
+ORDER BY total_ride desc
+
+
+  --Top 10 ten freqently used start station FOR casual. Used the same code FOR overall
+  AND members BY only changing the 'ORDER BY' clause. The results was collected on a table to be displayed on a chart
+  
+SELECT
+  DISTINCT start_station_name,
+  SUM(CASE
+      WHEN ride_id = ride_id AND start_station_name = start_station_name THEN 1
+    ELSE
+    0
+  END
+    ) AS total_ride,
+  SUM(CASE
+      WHEN member_casual = 'member' AND start_station_name = start_station_name THEN 1
+    ELSE
+    0
+  END
+    ) AS member_total,
+  SUM(CASE
+      WHEN member_casual = 'casual' AND start_station_name = start_station_name THEN 1
+    ELSE
+    0
+  END
+    ) AS casual_total,
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year`
+GROUP BY
+  start_station_name
+ORDER BY
+  casual_total DESC
+LIMIT
+  10
+
+
+--How members and casual riders use the different types of bike
+SELECT 
+  rideable_type,
+  COUNT (ride_id) AS num_of_rides,
+  SUM(CASE WHEN ride_id = ride_id AND member_casual = 'member' THEN 1 END) AS members,
+  SUM(CASE WHEN ride_id = ride_id AND member_casual = 'casual' THEN 1 END) AS casuals
+FROM `case-study-projects-394518.Transformed_bk_share.full_year_seasonal` 
+WHERE rideable_type IS NOT NULL
+GROUP BY rideable_type
+ORDER BY num_of_rides
