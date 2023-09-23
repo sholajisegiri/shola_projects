@@ -1,0 +1,210 @@
+--combining the divided july data. this is also done for all the months that have data larger than 100mb
+
+SELECT *  
+FROM 
+  `case-study-projects-394518.shola_bke_share.2207-book1` 
+
+UNION ALL
+
+SELECT *
+FROM
+  `case-study-projects-394518.shola_bke_share.2207-book2`
+
+
+
+
+--combining all the months in summer to form a table
+SELECT *
+FROM 
+  `case-study-projects-394518.shola_bke_share.2306-book` 
+
+
+UNION ALL
+
+SELECT *
+FROM 
+  `case-study-projects-394518.shola_bke_share.2207-book1`
+
+UNION ALL
+
+SELECT *
+FROM 
+  `case-study-projects-394518.shola_bke_share.2208-book1`
+
+
+
+
+--converting the data type of start_time and end_time from string to time
+
+SELECT
+  ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+  start_station_name,
+  start_station_id,
+  end_station_name,
+  end_station_id,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual,
+  ride_duration,
+  ride_date,
+  ride_month,
+  ride_year,
+  SAFE_CAST(start_time AS TIME) AS start_time,
+  SAFE_CAST (end_time AS TIME) AS end_time,
+  day_of_week
+FROM
+  `case-study-projects-394518.shola_bke_share.2207-book`
+
+
+
+--Uniting all the seasons to form a full year
+
+SELECT
+  *
+FROM
+  `case-study-projects-394518.Transformed_bk_share.auntumn_months`
+UNION DISTINCT
+SELECT
+  *
+FROM
+  `case-study-projects-394518.Transformed_bk_share.summer_months`
+UNION DISTINCT
+SELECT
+  *
+FROM
+  `case-study-projects-394518.Transformed_bk_share.spring_months`
+UNION DISTINCT
+SELECT
+  *
+FROM
+  `case-study-projects-394518.Transformed_bk_share.winter_months`
+
+
+
+--converting the data type of day_of_week from INT to string
+--The result was saved as a new table to run analysis on
+
+SELECT
+  ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+  start_station_name,
+  start_station_id,
+  end_station_name,
+  end_station_id,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual,
+  ride_duration,
+  ride_date,
+  ride_month,
+  ride_year,
+  start_time,
+  end_time,
+  CASE
+    WHEN day_of_week = 1 then 'sunday'
+    WHEN day_of_week = 2 then 'monday'
+    WHEN day_of_week = 3 then 'tuesday'
+    WHEN day_of_week = 4 then 'wednesday'
+    WHEN day_of_week = 5 then 'thursday'
+    WHEN day_of_week = 6 then 'friday'
+    WHEN day_of_week = 7 then 'saturday'
+    END AS day_of_week
+FROM
+  `case-study-projects-394518.Transformed_bk_share.autumn_months`
+
+
+
+--trying to convert the data type of ride_duration from 'time' to 'interval'. But it has to be converted to string first
+
+SELECT  ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+  start_station_name,
+  start_station_id,
+  end_station_name,
+  end_station_id,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual,
+CAST (ride_duration AS STRING) AS ride_duration,
+  ride_date,
+  ride_month,
+  ride_year,
+  start_time,
+  end_time,
+  day_of_week,
+FROM `case-study-projects-394518.Transformed_bk_share.autumn_month`
+
+
+--converting the data type from string to interval so calculations can be made
+
+SELECT 
+ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+  start_station_name,
+  start_station_id,
+  end_station_name,
+  end_station_id,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual,
+  CAST (ride_duration AS INTERVAL) AS ride_duration,
+  ride_date,
+  ride_month,
+  ride_year,
+  start_time,
+  end_time,
+  day_of_week,
+ FROM `case-study-projects-394518.Transformed_bk_share.autumn_sting`
+
+
+
+--including season column to the full year table. the table was saved and used for analysis based of seasons
+
+SELECT
+  ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+  start_station_name,
+  start_station_id,
+  end_station_name,
+  end_station_id,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual,
+  ride_duration,
+  ride_date,
+  ride_month,
+  ride_year,
+  start_time,
+  end_time,
+  day_of_week,
+  CASE
+   WHEN ride_month BETWEEN 6 and 8 then 'summer'
+   WHEN ride_month BETWEEN 9 and 11 then 'autumn'
+   WHEN ride_month BETWEEN 3 and 5 then 'spring'
+   WHEN ride_month < 3 then 'winter'
+   WHEN ride_month = 12 then 'winter'
+END AS season
+FROM
+  `case-study-projects-394518.Transformed_bk_share.full_year`
+
